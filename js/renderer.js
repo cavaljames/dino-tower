@@ -338,7 +338,7 @@ export class Renderer {
     ctx.fill()
     ctx.fillStyle = '#ffffff'
     ctx.font = 'bold 20px Arial'
-    ctx.fillText('再筑恐龙塔', this.screenWidth / 2, btnY + 32)
+    ctx.fillText('再玩一次', this.screenWidth / 2, btnY + 32)
 
     const shareY = this.screenHeight * 0.75
     ctx.fillStyle = '#5B4226'
