@@ -276,7 +276,7 @@ export class Renderer {
     ctx.fillStyle = '#7CFC00'
     ctx.font = 'bold 52px Arial'
     ctx.textAlign = 'center'
-    ctx.fillText('恐龙塔', this.screenWidth / 2, this.screenHeight * 0.36)
+    ctx.fillText('冲上恐龙塔', this.screenWidth / 2, this.screenHeight * 0.36)
 
     ctx.fillStyle = '#A8D5A2'
     ctx.font = '20px Arial'
@@ -388,7 +388,7 @@ export class Renderer {
     ctx.fillStyle = '#7CFC00'
     ctx.font = 'bold 28px Arial'
     ctx.textAlign = 'center'
-    ctx.fillText('恐龙塔排行榜', this.screenWidth / 2, 60)
+    ctx.fillText('排行榜', this.screenWidth / 2, 60)
 
     if (history.length === 0) {
       ctx.fillStyle = '#8B7D6B'

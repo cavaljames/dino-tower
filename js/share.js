@@ -13,7 +13,7 @@ export class Share {
 
     wx.onShareAppMessage(() => {
       return {
-        title: '恐龙塔 - 叠起远古巨兽的领地，你能叠多高？',
+        title: '冲上恐龙塔 - 叠起远古巨兽的领地，你能叠多高？',
         imageUrl: 'images/share-cover.png'
       }
     })
