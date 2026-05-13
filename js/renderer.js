@@ -66,6 +66,7 @@ export class Renderer {
     this.bgImage = null
     this.dinoImages = [null, null, null, null, null]
     this.dinoPopups = []
+    this.reviveEffect = null
     this._loadImages()
   }
 
@@ -184,6 +185,18 @@ export class Renderer {
         drawDinoOnBlock(ctx, block.dinoType, block.x, y, block.width, block.height)
       }
     }
+
+    if (block.isBase && block.layerNumber !== undefined) {
+      ctx.save()
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
+      ctx.font = 'bold 16px Arial'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.7)'
+      ctx.shadowBlur = 4
+      ctx.fillText(`${block.layerNumber}层`, block.x + block.width / 2, y + block.height / 2)
+      ctx.restore()
+    }
   }
 
   drawFallingPiece(piece) {
@@ -265,6 +278,58 @@ export class Renderer {
       popup.update()
     }
     this.dinoPopups = this.dinoPopups.filter(p => p.alive)
+
+    if (this.reviveEffect) {
+      this.reviveEffect.timer++
+      this.reviveEffect.alpha -= 0.015
+      this.reviveEffect.radius += 3
+      if (this.reviveEffect.alpha <= 0) this.reviveEffect = null
+    }
+  }
+
+  triggerReviveEffect() {
+    this.reviveEffect = {
+      timer: 0,
+      alpha: 1,
+      radius: 20
+    }
+  }
+
+  drawReviveEffect() {
+    if (!this.reviveEffect) return
+    const ctx = this.ctx
+    const e = this.reviveEffect
+    const cx = this.screenWidth / 2
+    const cy = this.screenHeight * 0.45
+
+    ctx.save()
+    ctx.globalAlpha = e.alpha
+
+    // 扩散能量环
+    for (let i = 0; i < 3; i++) {
+      ctx.strokeStyle = `rgba(124, 252, 0, ${0.6 - i * 0.15})`
+      ctx.lineWidth = 4 - i
+      ctx.beginPath()
+      ctx.arc(cx, cy, e.radius + i * 25, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+
+    // 向上光柱
+    const grad = ctx.createLinearGradient(cx, cy + 80, cx, cy - 120)
+    grad.addColorStop(0, 'rgba(124, 252, 0, 0)')
+    grad.addColorStop(0.5, 'rgba(124, 252, 0, 0.25)')
+    grad.addColorStop(1, 'rgba(124, 252, 0, 0)')
+    ctx.fillStyle = grad
+    ctx.fillRect(cx - 45, cy - 120, 90, 220)
+
+    ctx.fillStyle = '#7CFC00'
+    ctx.font = 'bold 28px Arial'
+    ctx.textAlign = 'center'
+    ctx.shadowColor = '#000'
+    ctx.shadowBlur = 8
+    ctx.fillText('恐龙救援！', cx, cy)
+
+    ctx.restore()
   }
 
   drawStartScreen(highScore) {
@@ -298,7 +363,7 @@ export class Renderer {
     ctx.fillText('点击屏幕开始', this.screenWidth / 2, this.screenHeight * 0.67)
   }
 
-  drawGameOver(score, highScore, isNewRecord) {
+  drawGameOver(score, highScore, isNewRecord, reviveCount) {
     const ctx = this.ctx
     ctx.fillStyle = 'rgba(0, 0, 0, 0.65)'
     ctx.fillRect(0, 0, this.screenWidth, this.screenHeight)
@@ -328,33 +393,41 @@ export class Renderer {
     ctx.font = '18px Arial'
     ctx.fillText(`最高: ${highScore} 层`, this.screenWidth / 2, this.screenHeight * 0.56)
 
-    const btnY = this.screenHeight * 0.64
     const btnW = 200
-    const btnH = 50
+    const btnH = 42
     const btnX = (this.screenWidth - btnW) / 2
 
+    const reviveY = this.screenHeight * 0.58
+    ctx.fillStyle = '#7CFC00'
+    this._roundRect(btnX, reviveY, btnW, btnH, 21)
+    ctx.fill()
+    ctx.fillStyle = '#1A2A16'
+    ctx.font = 'bold 18px Arial'
+    ctx.fillText(`恐龙救援 (${reviveCount || 0})`, this.screenWidth / 2, reviveY + 28)
+
+    const btnY = this.screenHeight * 0.69
     ctx.fillStyle = '#3D6B4F'
-    this._roundRect(btnX, btnY, btnW, btnH, 25)
+    this._roundRect(btnX, btnY, btnW, btnH, 21)
     ctx.fill()
     ctx.fillStyle = '#ffffff'
-    ctx.font = 'bold 20px Arial'
-    ctx.fillText('再玩一次', this.screenWidth / 2, btnY + 32)
+    ctx.font = 'bold 18px Arial'
+    ctx.fillText('再玩一次', this.screenWidth / 2, btnY + 28)
 
-    const shareY = this.screenHeight * 0.75
+    const shareY = this.screenHeight * 0.80
     ctx.fillStyle = '#5B4226'
-    this._roundRect(btnX, shareY, btnW, btnH, 25)
+    this._roundRect(btnX, shareY, btnW, btnH, 21)
     ctx.fill()
     ctx.fillStyle = '#ffffff'
-    ctx.font = 'bold 20px Arial'
-    ctx.fillText('召唤好友', this.screenWidth / 2, shareY + 32)
+    ctx.font = 'bold 18px Arial'
+    ctx.fillText('召唤好友', this.screenWidth / 2, shareY + 28)
 
-    const lbY = this.screenHeight * 0.86
+    const lbY = this.screenHeight * 0.91
     ctx.fillStyle = '#4A7C59'
-    this._roundRect(btnX, lbY, btnW, btnH, 25)
+    this._roundRect(btnX, lbY, btnW, btnH, 21)
     ctx.fill()
     ctx.fillStyle = '#ffffff'
-    ctx.font = 'bold 20px Arial'
-    ctx.fillText('排行榜', this.screenWidth / 2, lbY + 32)
+    ctx.font = 'bold 18px Arial'
+    ctx.fillText('排行榜', this.screenWidth / 2, lbY + 28)
   }
 
   updateCamera(stackTopY) {

@@ -26,6 +26,7 @@ export class GameManager {
     this.isNewRecord = false
     this.placing = false
     this.paused = false
+    this.reviveCount = 0
 
     this.renderer = new Renderer({ canvas, ctx, screenWidth, screenHeight, offsetY: this.offsetY })
     this.stack = new Stack(screenWidth, screenHeight)
@@ -89,6 +90,7 @@ export class GameManager {
         this.renderer.drawHUD(this.stack.score, this.stack.combo)
         // 绘制恐龙弹出特效
         this.renderer.drawDinoPopups()
+        this.renderer.drawReviveEffect()
         break
       case STATE.GAME_OVER:
         this.renderer.drawBackground()
@@ -101,7 +103,7 @@ export class GameManager {
         for (const piece of this.stack.fallingPieces) {
           this.renderer.drawFallingPiece(piece)
         }
-        this.renderer.drawGameOver(this.lastScore, this.highScore, this.isNewRecord)
+        this.renderer.drawGameOver(this.lastScore, this.highScore, this.isNewRecord, this.reviveCount)
         break
       case STATE.LEADERBOARD:
         this.renderer.drawLocalLeaderboard()
@@ -132,6 +134,7 @@ export class GameManager {
     this.state = STATE.PLAYING
     this.placing = false
     this.isNewRecord = false
+    this.reviveCount = 0
     this.renderer.cameraOffsetY = 0
   }
 
@@ -163,6 +166,18 @@ export class GameManager {
     setTimeout(() => { this.placing = false }, 100)
   }
 
+  _revive() {
+    this.reviveCount++
+    this.stack.revive()
+    this.state = STATE.PLAYING
+    this.placing = false
+    this.paused = false
+    this.renderer.updateCamera(this.stack.stackTopY)
+    this.renderer.triggerReviveEffect()
+    this.audio.playPerfect(0)
+    this.audio.playAmbient()
+  }
+
   _onGameOver() {
     this.state = STATE.GAME_OVER
     this.lastScore = this.stack.score
@@ -183,17 +198,22 @@ export class GameManager {
     const btnW = 200
     const btnH = 50
     const btnX = (this.screenWidth - btnW) / 2
-    const restartY = this.screenHeight * 0.64
+    const reviveY = this.screenHeight * 0.58
+    if (x >= btnX && x <= btnX + btnW && y >= reviveY && y <= reviveY + btnH) {
+      this._revive()
+      return
+    }
+    const restartY = this.screenHeight * 0.69
     if (x >= btnX && x <= btnX + btnW && y >= restartY && y <= restartY + btnH) {
       this._startGame()
       return
     }
-    const shareY = this.screenHeight * 0.75
+    const shareY = this.screenHeight * 0.80
     if (x >= btnX && x <= btnX + btnW && y >= shareY && y <= shareY + btnH) {
       this.share.shareScore(this.lastScore, this.stack.combo)
       return
     }
-    const leaderboardY = this.screenHeight * 0.86
+    const leaderboardY = this.screenHeight * 0.91
     if (x >= btnX && x <= btnX + btnW && y >= leaderboardY && y <= leaderboardY + btnH) {
       this.state = STATE.LEADERBOARD
       requestFriendLeaderboard()

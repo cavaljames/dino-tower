@@ -19,6 +19,7 @@ export class Stack {
     this.combo = 0
     this.score = 0
     this.gameOver = false
+    this.reviveBoostCount = 0
   }
 
   // 初始化基座
@@ -33,6 +34,8 @@ export class Stack {
     })
     baseBlock.setScreenWidth(this.screenWidth)
     baseBlock.stop()
+    baseBlock.isBase = true
+    baseBlock.layerNumber = this.layerCount
     this.blocks.push(baseBlock)
     this.baseBlock = baseBlock
 
@@ -49,7 +52,13 @@ export class Stack {
     const layerFactor = Math.min(this.layerCount / 20, 1.0)
     // 宽度系数：越窄越慢，1.0~0.3
     const widthFactor = Math.max(width / this.screenWidth, 0.3)
-    const speed = 1.5 + layerFactor * 10 * widthFactor
+    let speed = 1.5 + layerFactor * 10 * widthFactor
+    if (this.reviveBoostCount > 0) {
+      const boostIndex = 6 - this.reviveBoostCount
+      const reduce = 0.25 - boostIndex * 0.05
+      speed *= (1 - Math.max(reduce, 0.05))
+      this.reviveBoostCount--
+    }
 
     const block = new Block({
       x: 0,
@@ -129,6 +138,9 @@ export class Stack {
     placedBlock.dinoType = moving.dinoType !== undefined ? moving.dinoType : undefined
     placedBlock.setScreenWidth(this.screenWidth)
     placedBlock.stop()
+    if (this.baseBlock) this.baseBlock.isBase = false
+    placedBlock.isBase = true
+    placedBlock.layerNumber = this.layerCount + 1
     this.blocks.push(placedBlock)
     this.baseBlock = placedBlock
     this.layerCount++
@@ -226,6 +238,29 @@ export class Stack {
     return this.screenHeight
   }
 
+  revive() {
+    this.gameOver = false
+    this.fallingPieces = []
+    this.particles = []
+
+    const minWidth = this.screenWidth * 0.32
+    const baseY = this.screenHeight - this.blockHeight - 40
+
+    if (this.baseBlock) {
+      if (this.baseBlock.width < minWidth) {
+        this.baseBlock.width = minWidth
+      }
+      this.baseBlock.x = (this.screenWidth - this.baseBlock.width) / 2
+      this.baseBlock.y = baseY
+      this.baseBlock.isBase = true
+      this.baseBlock.layerNumber = this.layerCount
+      this.blocks = [this.baseBlock]
+    }
+
+    this.reviveBoostCount = 5
+    this._createMovingBlock()
+  }
+
   // 重置
   reset() {
     this.blocks = []
@@ -237,6 +272,7 @@ export class Stack {
     this.combo = 0
     this.score = 0
     this.gameOver = false
+    this.reviveBoostCount = 0
     this.init()
   }
 }
