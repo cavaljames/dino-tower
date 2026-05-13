@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>冲上云霄 - 叠宝塔</title>
+  <style>
+    * { margin: 0; padding: 0; }
+    body {
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      box-shadow: 0 0 40px rgba(100, 50, 150, 0.3);
+    }
+  </style>
+</head>
+<body>
+<script>
+// ====== wx API 浏览器模拟层 ======
+const _storage = {};
+
+const wx = {
+  _canvas: null,
+
+  createCanvas() {
+    const canvas = document.createElement('canvas');
+    // 固定逻辑像素尺寸，简单可靠
+    canvas.width = 375;
+    canvas.height = 667;
+    canvas.style.width = '375px';
+    canvas.style.height = '667px';
+    document.body.appendChild(canvas);
+    this._canvas = canvas;
+    return canvas;
+  },
+
+  getSystemInfoSync() {
+    return {
+      pixelRatio: window.devicePixelRatio || 1,
+      screenWidth: 375,
+      screenHeight: 667,
+      windowWidth: 375,
+      windowHeight: 667
+    };
+  },
+
+  onTouchStart(callback) {
+    const startAudio = () => {
+      // 在用户手势中尽早初始化 AudioContext
+      if (!wx._audioCtx) {
+        try {
+          const AC = window.AudioContext || window.webkitAudioContext
+          if (AC) wx._audioCtx = new AC()
+        } catch(e) {}
+      }
+      if (wx._audioCtx && wx._audioCtx.state === 'suspended') {
+        wx._audioCtx.resume()
+      }
+    }
+
+    document.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      startAudio();
+      const touch = e.touches[0];
+      const rect = wx._canvas.getBoundingClientRect();
+      callback({
+        touches: [{
+          clientX: touch.clientX - rect.left,
+          clientY: touch.clientY - rect.top,
+          pageX: touch.pageX - rect.left,
+          pageY: touch.pageY - rect.top
+        }]
+      });
+    }, { passive: false });
+
+    document.addEventListener('mousedown', (e) => {
+      startAudio();
+      const rect = wx._canvas.getBoundingClientRect();
+      callback({
+        touches: [{
+          clientX: e.clientX - rect.left,
+          clientY: e.clientY - rect.top,
+          pageX: e.pageX - rect.left,
+          pageY: e.pageY - rect.top
+        }]
+      });
+    });
+  },
+
+  createInnerAudioContext() {
+    const audio = new Audio();
+    return {
+      _audio: audio,
+      _src: '',
+      set src(val) { this._src = val; audio.src = val; },
+      get src() { return this._src; },
+      set volume(val) { audio.volume = val; },
+      get volume() { return audio.volume; },
+      set loop(val) { audio.loop = val; },
+      get loop() { return audio.loop; },
+      get startTime() { return 0; },
+      seek(pos) { audio.currentTime = pos; },
+      play() { audio.play().catch(() => {}); },
+      stop() { audio.pause(); audio.currentTime = 0; },
+      pause() { audio.pause(); },
+      destroy() { audio.pause(); }
+    };
+  },
+
+  setStorageSync(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch(e) {}
+  },
+
+  getStorageSync(key) {
+    try {
+      const val = localStorage.getItem(key);
+      return val ? JSON.parse(val) : '';
+    } catch(e) { return ''; }
+  },
+
+  showShareMenu() {},
+  onShareAppMessage() {},
+  shareAppMessage() { alert('分享功能仅在微信中可用'); },
+  onHide() {},
+  onShow() {}
+};
+
+// 暴露到全局
+window.wx = wx;
+</script>
+
+<!-- 游戏模块（type=module 需要 HTTP 服务器） -->
+<script type="module">
+import { GameManager } from './js/game-manager.js?v=2';
+
+const canvas = wx.createCanvas();
+const ctx = canvas.getContext('2d');
+
+const game = new GameManager({
+  canvas,
+  ctx,
+  screenWidth: canvas.width,
+  screenHeight: canvas.height
+});
+
+game.start();
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+node_modules/
+.comate/
+.agents/
+skills-lock.json
+
+# macOS
+.DS_Store
+
+# 微信开发者工具
+project.private.config.json
+
+# 本地测试脚本
+restart.sh
