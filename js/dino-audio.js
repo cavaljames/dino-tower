@@ -73,9 +73,17 @@ export class DinoAudio {
         sound.volume = volume || 1
         sound.seek(0)
         sound._playing = true
-        sound.onEnded(() => { sound._playing = false })
-        sound.onStop(() => { sound._playing = false })
+        // 兼容：模拟环境可能没有 onEnded
+        if (typeof sound.onEnded === 'function') {
+          sound.onEnded(() => { sound._playing = false })
+        }
+        if (typeof sound.onStop === 'function') {
+          sound.onStop(() => { sound._playing = false })
+        }
         sound.play()
+        // 兜底：3秒后自动清除播放标记（防止无回调导致永久锁死）
+        const maxDur = 3000
+        setTimeout(() => { sound._playing = false }, maxDur)
       } else {
         sound.volume = volume || 1
         sound.currentTime = 0

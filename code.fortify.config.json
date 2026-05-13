@@ -1,0 +1,53 @@
+{
+  "plugin_protect": {
+    "name": "外挂防护",
+    "files": []
+  },
+  "watermark": {
+    "name": "水印保护",
+    "files": [
+      "js/audio.js",
+      "js/block.js",
+      "js/dino-audio.js",
+      "js/dino-graphics.js",
+      "js/game-manager.js",
+      "js/input.js",
+      "js/leaderboard.js",
+      "js/renderer.js",
+      "js/share.js",
+      "js/stack.js"
+    ]
+  },
+  "obfuscation": {
+    "name": "代码混淆",
+    "tasks": [
+      {
+        "level": 1,
+        "files": []
+      },
+      {
+        "level": 3,
+        "files": [
+          "js/audio.js",
+          "js/block.js",
+          "js/dino-audio.js",
+          "js/dino-graphics.js",
+          "js/game-manager.js",
+          "js/input.js",
+          "js/leaderboard.js",
+          "js/renderer.js",
+          "js/share.js",
+          "js/stack.js"
+        ]
+      }
+    ]
+  },
+  "anti_inject": {
+    "name": "代码防注入",
+    "files": []
+  },
+  "platform_lock": {
+    "name": "平台锁",
+    "files": []
+  }
+}

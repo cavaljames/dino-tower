@@ -4,19 +4,22 @@ import { Input } from './input.js'
 import { DinoAudio } from './dino-audio.js'
 import { Share } from './share.js'
 import { getHighScore, setHighScore } from './utils.js'
+import { submitScore, requestFriendLeaderboard, closeFriendLeaderboard, requestUserProfile } from './leaderboard.js'
 
 const STATE = {
   START: 'start',
   PLAYING: 'playing',
-  GAME_OVER: 'game_over'
+  GAME_OVER: 'game_over',
+  LEADERBOARD: 'leaderboard'
 }
 
 export class GameManager {
-  constructor({ canvas, ctx, screenWidth, screenHeight }) {
+  constructor({ canvas, ctx, screenWidth, screenHeight, offsetY }) {
     this.canvas = canvas
     this.ctx = ctx
     this.screenWidth = screenWidth
     this.screenHeight = screenHeight
+    this.offsetY = offsetY || 0
     this.state = STATE.START
     this.highScore = getHighScore()
     this.lastScore = 0
@@ -24,7 +27,7 @@ export class GameManager {
     this.placing = false
     this.paused = false
 
-    this.renderer = new Renderer({ canvas, ctx, screenWidth, screenHeight })
+    this.renderer = new Renderer({ canvas, ctx, screenWidth, screenHeight, offsetY: this.offsetY })
     this.stack = new Stack(screenWidth, screenHeight)
     this.input = new Input(canvas)
     this.audio = new DinoAudio()
@@ -100,6 +103,9 @@ export class GameManager {
         }
         this.renderer.drawGameOver(this.lastScore, this.highScore, this.isNewRecord)
         break
+      case STATE.LEADERBOARD:
+        this.renderer.drawLocalLeaderboard()
+        break
     }
   }
 
@@ -113,6 +119,10 @@ export class GameManager {
         break
       case STATE.GAME_OVER:
         this._handleGameOverTap(touch)
+        break
+      case STATE.LEADERBOARD:
+        this.state = STATE.GAME_OVER
+        closeFriendLeaderboard()
         break
     }
   }
@@ -161,11 +171,15 @@ export class GameManager {
       this.isNewRecord = true
       setHighScore(this.highScore)
     }
+    // 先获取用户昵称授权，再提交分数
+    requestUserProfile().then(() => {
+      submitScore(this.lastScore)
+    })
   }
 
   _handleGameOverTap(touch) {
     const x = touch.clientX
-    const y = touch.clientY
+    const y = touch.clientY - this.offsetY
     const btnW = 200
     const btnH = 50
     const btnX = (this.screenWidth - btnW) / 2
@@ -177,6 +191,12 @@ export class GameManager {
     const shareY = this.screenHeight * 0.75
     if (x >= btnX && x <= btnX + btnW && y >= shareY && y <= shareY + btnH) {
       this.share.shareScore(this.lastScore, this.stack.combo)
+      return
+    }
+    const leaderboardY = this.screenHeight * 0.86
+    if (x >= btnX && x <= btnX + btnW && y >= leaderboardY && y <= leaderboardY + btnH) {
+      this.state = STATE.LEADERBOARD
+      requestFriendLeaderboard()
       return
     }
   }

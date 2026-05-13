@@ -56,11 +56,12 @@ class DinoPopup {
 }
 
 export class Renderer {
-  constructor({ canvas, ctx, screenWidth, screenHeight }) {
+  constructor({ canvas, ctx, screenWidth, screenHeight, offsetY }) {
     this.canvas = canvas
     this.ctx = ctx
     this.screenWidth = screenWidth
     this.screenHeight = screenHeight
+    this.offsetY = offsetY || 0
     this.cameraOffsetY = 0
     this.bgImage = null
     this.dinoImages = [null, null, null, null, null]
@@ -104,7 +105,11 @@ export class Renderer {
   }
 
   clear() {
-    this.ctx.clearRect(0, 0, this.screenWidth, this.screenHeight)
+    const ctx = this.ctx
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    // 整体下移offsetY，给小程序按钮留空间
+    ctx.translate(0, this.offsetY)
   }
 
   drawBackground() {
@@ -342,6 +347,14 @@ export class Renderer {
     ctx.fillStyle = '#ffffff'
     ctx.font = 'bold 20px Arial'
     ctx.fillText('召唤好友', this.screenWidth / 2, shareY + 32)
+
+    const lbY = this.screenHeight * 0.86
+    ctx.fillStyle = '#4A7C59'
+    this._roundRect(btnX, lbY, btnW, btnH, 25)
+    ctx.fill()
+    ctx.fillStyle = '#ffffff'
+    ctx.font = 'bold 20px Arial'
+    ctx.fillText('排行榜', this.screenWidth / 2, lbY + 32)
   }
 
   updateCamera(stackTopY) {
@@ -351,6 +364,76 @@ export class Renderer {
     } else {
       this.cameraOffsetY = 0
     }
+  }
+
+  drawLocalLeaderboard() {
+    const ctx = this.ctx
+
+    // 获取本地历史数据
+    let history = []
+    try {
+      if (typeof wx !== 'undefined' && wx.getStorageSync) {
+        history = wx.getStorageSync('leaderboardHistory') || []
+      } else if (typeof localStorage !== 'undefined') {
+        const data = localStorage.getItem('leaderboardHistory')
+        history = data ? JSON.parse(data) : []
+      }
+    } catch (e) {}
+
+    // 背景
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.9)'
+    ctx.fillRect(0, 0, this.screenWidth, this.screenHeight)
+
+    // 标题
+    ctx.fillStyle = '#7CFC00'
+    ctx.font = 'bold 28px Arial'
+    ctx.textAlign = 'center'
+    ctx.fillText('恐龙塔排行榜', this.screenWidth / 2, 60)
+
+    if (history.length === 0) {
+      ctx.fillStyle = '#8B7D6B'
+      ctx.font = '20px Arial'
+      ctx.fillText('暂无记录，快来创造第一个！', this.screenWidth / 2, this.screenHeight / 2)
+    } else {
+      const startY = 100
+      const rowHeight = 45
+
+      history.slice(0, 15).forEach((item, index) => {
+        const y = startY + index * rowHeight
+
+        // 排名颜色
+        let rankColor = '#E8D5A3'
+        if (index === 0) rankColor = '#FFD700'
+        else if (index === 1) rankColor = '#C0C0C0'
+        else if (index === 2) rankColor = '#CD7F32'
+
+        // 排名
+        ctx.fillStyle = rankColor
+        ctx.font = 'bold 20px Arial'
+        ctx.textAlign = 'left'
+        ctx.fillText(`${index + 1}`, 20, y)
+
+        // 昵称
+        ctx.fillStyle = '#E8D5A3'
+        ctx.font = '18px Arial'
+        ctx.textAlign = 'left'
+        const nickname = item.nickname || '恐龙猎人'
+        const displayName = nickname.length > 6 ? nickname.slice(0, 6) + '…' : nickname
+        ctx.fillText(displayName, 55, y)
+
+        // 分数
+        ctx.fillStyle = '#7CFC00'
+        ctx.font = 'bold 20px Arial'
+        ctx.textAlign = 'right'
+        ctx.fillText(`${item.score} 层`, this.screenWidth - 20, y)
+      })
+    }
+
+    // 关闭提示
+    ctx.fillStyle = '#8B7D6B'
+    ctx.font = '16px Arial'
+    ctx.textAlign = 'center'
+    ctx.fillText('点击任意位置关闭', this.screenWidth / 2, this.screenHeight - 30)
   }
 
   _roundRect(x, y, w, h, r) {

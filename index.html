@@ -98,8 +98,15 @@ const wx = {
 
   createInnerAudioContext() {
     const audio = new Audio();
+    let onEndedCb = null;
+    let onStopCb = null;
+    audio.addEventListener('ended', () => {
+      this._playing = false;
+      if (onEndedCb) onEndedCb();
+    });
     return {
       _audio: audio,
+      _playing: false,
       _src: '',
       set src(val) { this._src = val; audio.src = val; },
       get src() { return this._src; },
@@ -109,9 +116,11 @@ const wx = {
       get loop() { return audio.loop; },
       get startTime() { return 0; },
       seek(pos) { audio.currentTime = pos; },
-      play() { audio.play().catch(() => {}); },
-      stop() { audio.pause(); audio.currentTime = 0; },
-      pause() { audio.pause(); },
+      onEnded(cb) { onEndedCb = cb; },
+      onStop(cb) { onStopCb = cb; },
+      play() { this._playing = true; audio.play().catch(() => {}); },
+      stop() { audio.pause(); audio.currentTime = 0; this._playing = false; if (onStopCb) onStopCb(); },
+      pause() { audio.pause(); this._playing = false; },
       destroy() { audio.pause(); }
     };
   },
@@ -131,7 +140,30 @@ const wx = {
   onShareAppMessage() {},
   shareAppMessage() { alert('分享功能仅在微信中可用'); },
   onHide() {},
-  onShow() {}
+  onShow() {},
+
+  // 排行榜云存储模拟
+  setUserCloudStorage({ KVDataList, success, fail }) {
+    try {
+      const data = JSON.parse(localStorage.getItem('_cloudStorage') || '{}');
+      KVDataList.forEach(kv => { data[kv.key] = kv.value; });
+      localStorage.setItem('_cloudStorage', JSON.stringify(data));
+      if (success) success();
+    } catch(e) { if (fail) fail(e); }
+  },
+
+  getUserProfile({ success, fail }) {
+    // H5模拟：返回默认昵称
+    if (success) success({ userInfo: { nickName: '恐龙猎人', avatarUrl: '' } });
+  },
+
+  getOpenDataContext() {
+    return {
+      postMessage(msg) {
+        console.log('[openDataContext] message:', msg);
+      }
+    };
+  }
 };
 
 // 暴露到全局
@@ -149,7 +181,8 @@ const game = new GameManager({
   canvas,
   ctx,
   screenWidth: canvas.width,
-  screenHeight: canvas.height
+  screenHeight: canvas.height,
+  offsetY: 0
 });
 
 game.start();
