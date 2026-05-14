@@ -10,6 +10,7 @@ export class Block {
     this.speed = speed
     this.direction = 1 // 1=向右, -1=向左
     this.placed = false
+    this.isRainbow = false
   }
 
   update() {

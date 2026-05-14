@@ -21,7 +21,7 @@ export class Share {
 
   // 主动分享分数
   shareScore(score, combo) {
-    let title = `我在恐龙塔叠了${score}层！你能更高吗？`
+    let title = `我在恐龙塔得了${score}分！你能更高吗？`
     if (combo >= 5) {
       title = `连续${combo}次完美叠放！恐龙之力觉醒！`
     }

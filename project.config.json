@@ -55,7 +55,7 @@
     "disableSWC": true
   },
   "compileType": "game",
-  "libVersion": "3.3.4",
+  "libVersion": "3.16.0",
   "appid": "wxf5edf2a0c53f3562",
   "projectname": "myfirst_game",
   "condition": {},

@@ -15,7 +15,8 @@
       "js/leaderboard.js",
       "js/renderer.js",
       "js/share.js",
-      "js/stack.js"
+      "js/stack.js",
+      "js/debug-config.js"
     ]
   },
   "obfuscation": {
@@ -37,7 +38,8 @@
           "js/leaderboard.js",
           "js/renderer.js",
           "js/share.js",
-          "js/stack.js"
+          "js/stack.js",
+          "js/debug-config.js"
         ]
       }
     ]
