@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="冲上恐龙塔是一款侏罗纪主题微信小游戏，精准叠放方块，唤醒恐龙之力，挑战好友排行。">
+  <title>冲上恐龙塔 - 侏罗纪叠塔小游戏</title>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #07130A;
+      color: #E8D5A3;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.7;
+    }
+
+    .page {
+      background:
+        linear-gradient(180deg, rgba(7, 19, 10, 0.15), #07130A 42%, #07130A 100%),
+        url("images/jungle-background.png") center top / cover no-repeat fixed;
+    }
+
+    .hero {
+      min-height: 92vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 56px 20px;
+      position: relative;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at center 28%, rgba(124, 252, 0, 0.18), transparent 34%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.58), rgba(7, 19, 10, 0.94));
+    }
+
+    .hero-inner {
+      width: min(920px, 100%);
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 40px 24px;
+      border: 1px solid rgba(124, 252, 0, 0.22);
+      border-radius: 28px;
+      background: rgba(5, 18, 8, 0.64);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48);
+      backdrop-filter: blur(4px);
+    }
+
+    .logo {
+      width: 96px;
+      height: 96px;
+      border-radius: 22px;
+      margin-bottom: 22px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    }
+
+    .eyebrow {
+      color: #A8D5A2;
+      font-size: 15px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      color: #7CFC00;
+      font-size: clamp(48px, 11vw, 96px);
+      line-height: 1;
+      letter-spacing: 0.08em;
+      text-shadow: 0 0 22px rgba(124, 252, 0, 0.34), 0 6px 20px #000;
+    }
+
+    .subtitle {
+      margin: 22px auto 0;
+      max-width: 680px;
+      color: #E8D5A3;
+      font-size: clamp(18px, 4vw, 26px);
+      font-weight: 600;
+    }
+
+    .hero-desc {
+      margin: 18px auto 0;
+      max-width: 720px;
+      color: #A8D5A2;
+      font-size: 17px;
+    }
+
+    .cta {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 13px 28px;
+      border-radius: 999px;
+      color: #10220F;
+      background: linear-gradient(135deg, #7CFC00, #A8D5A2);
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 0 10px 30px rgba(124, 252, 0, 0.22);
+    }
+
+    main {
+      width: min(1100px, 100%);
+      margin: 0 auto;
+      padding: 28px 20px 72px;
+    }
+
+    section {
+      margin-top: 34px;
+    }
+
+    .panel {
+      border: 1px solid rgba(124, 252, 0, 0.16);
+      border-radius: 24px;
+      background: rgba(12, 30, 16, 0.88);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.34);
+      padding: clamp(24px, 5vw, 42px);
+    }
+
+    h2 {
+      color: #7CFC00;
+      font-size: clamp(26px, 6vw, 40px);
+      margin-bottom: 16px;
+      letter-spacing: 0.04em;
+    }
+
+    .lead {
+      color: #D8C48F;
+      font-size: 18px;
+      max-width: 820px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      min-height: 190px;
+      padding: 24px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(61, 107, 79, 0.42), rgba(20, 41, 23, 0.86));
+      border: 1px solid rgba(168, 213, 162, 0.14);
+    }
+
+    .card strong {
+      display: block;
+      color: #E8D5A3;
+      font-size: 21px;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      color: #A8D5A2;
+      font-size: 15px;
+    }
+
+    .steps {
+      display: grid;
+      gap: 14px;
+      counter-reset: step;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 16px;
+      align-items: start;
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(0, 0, 0, 0.22);
+      border: 1px solid rgba(232, 213, 163, 0.1);
+    }
+
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #07130A;
+      background: #7CFC00;
+      font-weight: 900;
+      box-shadow: 0 0 20px rgba(124, 252, 0, 0.28);
+    }
+
+    .step h3 {
+      color: #E8D5A3;
+      font-size: 19px;
+      margin-bottom: 4px;
+    }
+
+    .step p {
+      color: #A8D5A2;
+      font-size: 15px;
+    }
+
+    .qrcode-panel {
+      text-align: center;
+      background:
+        radial-gradient(circle at center, rgba(124, 252, 0, 0.12), transparent 42%),
+        rgba(12, 30, 16, 0.92);
+    }
+
+    .qrcode-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(180px, 260px));
+      gap: 28px;
+      justify-content: center;
+      margin-top: 28px;
+    }
+
+    .qrcode-card {
+      padding: 18px;
+      border-radius: 22px;
+      background: rgba(0, 0, 0, 0.22);
+      border: 1px solid rgba(168, 213, 162, 0.16);
+    }
+
+    .qrcode-card h3 {
+      color: #E8D5A3;
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+
+    .qrcode {
+      width: 100%;
+      max-width: 220px;
+      margin: 0 auto 14px;
+      padding: 12px;
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+      display: block;
+    }
+
+    .hint {
+      color: #A8D5A2;
+      font-size: 16px;
+    }
+
+    footer {
+      text-align: center;
+      color: #6F806C;
+      padding: 24px 20px 38px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 860px) {
+      .features {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .hero {
+        min-height: 88vh;
+        padding: 28px 16px;
+      }
+
+      .hero-inner {
+        padding: 32px 18px;
+        border-radius: 22px;
+      }
+
+      .features {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        min-height: auto;
+      }
+
+      .qrcode-list {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="hero-inner">
+        <img class="logo" src="images/logo.png" alt="冲上恐龙塔 logo">
+        <div class="eyebrow">Jurassic Stack Challenge</div>
+        <h1>冲上恐龙塔</h1>
+        <p class="subtitle">在侏罗纪丛林中，叠起属于你的远古高塔。</p>
+        <p class="hero-desc">滑动的方块、越来越快的节奏、不断缩短的塔基，每一次完美叠放都会唤醒不同恐龙的力量。</p>
+        <a class="cta" href="#qrcode-section">微信扫码开玩</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel">
+        <h2>游戏简介</h2>
+        <p class="lead">《冲上恐龙塔》是一款侏罗纪主题的休闲叠塔小游戏。玩家需要在方块左右滑动时点击放置，让高塔一层层向上生长。越精准，得分越高；连续完美叠放会触发恐龙助力、专属音效和视觉特效，挑战你的反应与耐心。</p>
+      </section>
+
+      <section class="features">
+        <article class="card">
+          <strong>精准叠放</strong>
+          <p>普通放置获得基础分，完美放置触发连击加成。连击越多，分数增长越快。</p>
+        </article>
+        <article class="card">
+          <strong>恐龙助力</strong>
+          <p>霸王龙、腕龙、甲龙、翼龙、迅猛龙轮番登场，每种恐龙拥有独特音效与助力表现。</p>
+        </article>
+        <article class="card">
+          <strong>恐龙救援</strong>
+          <p>失败后可以复活继续挑战，保留分数和层数，塔基会被恐龙力量重新加固。</p>
+        </article>
+        <article class="card">
+          <strong>好友排行</strong>
+          <p>记录你的最高层数，与好友比较成绩，看谁能在远古丛林中叠得更高。</p>
+        </article>
+      </section>
+
+      <section class="panel">
+        <h2>玩法说明</h2>
+        <div class="steps">
+          <div class="step">
+            <div>
+              <h3>观察滑动方块</h3>
+              <p>方块会在屏幕中左右移动，层数越高，移动速度越快。</p>
+            </div>
+          </div>
+          <div class="step">
+            <div>
+              <h3>点击屏幕放置</h3>
+              <p>在合适时机点击屏幕，让方块尽可能与下方塔基重合。</p>
+            </div>
+          </div>
+          <div class="step">
+            <div>
+              <h3>连续完美叠放</h3>
+              <p>越接近中心越容易触发完美判定，连击会唤醒恐龙之力。</p>
+            </div>
+          </div>
+          <div class="step">
+            <div>
+              <h3>挑战更高层数</h3>
+              <p>方块会逐渐变短，节奏会越来越紧张，尽可能刷新自己的最高纪录。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="qrcode-section" class="panel qrcode-panel">
+        <h2>扫码进入侏罗纪</h2>
+        <p class="lead" style="margin:0 auto;">打开微信扫一扫，选择正式版或体验版进入《冲上恐龙塔》小游戏。</p>
+        <div class="qrcode-list">
+          <div class="qrcode-card">
+            <h3>正式版</h3>
+            <img class="qrcode" src="images/qrcode.jpg" alt="冲上恐龙塔正式版微信小游戏二维码">
+            <p class="hint">稳定版本，适合正式体验</p>
+          </div>
+          <div class="qrcode-card">
+            <h3>体验版</h3>
+            <img class="qrcode" src="images/qrtest.png" alt="冲上恐龙塔体验版微信小游戏二维码">
+            <p class="hint">测试版本，优先体验新功能</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>© 2026 冲上恐龙塔 Dino Tower</footer>
+  </div>
+</body>
+</html>
