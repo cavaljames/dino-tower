@@ -357,7 +357,8 @@ export class Renderer {
     this._roundRect(block.x, y, block.width, block.height * 0.25, 4)
     ctx.fill()
 
-    if (block.width > 35 && block.dinoType !== undefined) {
+    // 恐龙图标渲染（仅 unknown-dino 方块 dinoType=-1）
+    if (block.dinoType !== undefined) {
       let img
       if (block.dinoType === -1) {
         img = this.unknownDinoImage
@@ -365,7 +366,8 @@ export class Renderer {
         img = this.dinoImages[block.dinoType]
       }
       if (img) {
-        const drawSize = Math.min(block.width * 0.8, block.height * 0.9)
+        // 允许恐龙图片左右超出方块（方块过窄时）
+        const drawSize = Math.max(Math.min(block.width * 0.8, block.height * 0.9), block.height * 0.7)
         const dx = block.x + (block.width - drawSize) / 2
         const dy = y + (block.height - drawSize) / 2
         ctx.save()
@@ -416,6 +418,39 @@ export class Renderer {
       ctx.lineWidth = 3
       this._roundRect(block.x, y, block.width, block.height, 4)
       ctx.stroke()
+      ctx.restore()
+    }
+
+    // 当前生效的恐龙效果（滑动期间：方块闪烁+内部文字）
+    if (block.activeEffects && block.activeEffects.length > 0 && block.moving) {
+      const effectNames = ['霸王龙之怒：减速', '腕龙之力：加宽', '剑龙之盾：护甲', '翼龙之翼：矫正', '迅猛龙之速：x3分']
+      const effectColors = ['#FF4444', '#44FF44', '#FFD700', '#44DDFF', '#FF44FF']
+      const ctx = this.ctx
+      const mainEffect = block.activeEffects[0]
+
+      // 方块整体闪烁浮层（透明呼吸效果）
+      if (!block._effectTimer) block._effectTimer = 0
+      block._effectTimer++
+      const flashAlpha = 0.08 + Math.sin(block._effectTimer * 0.15) * 0.06
+      ctx.save()
+      ctx.globalAlpha = flashAlpha
+      ctx.fillStyle = effectColors[mainEffect]
+      this._roundRect(block.x, y, block.width, block.height, 4)
+      ctx.fill()
+      ctx.restore()
+
+      // 方块内显示效果文字
+      ctx.save()
+      ctx.globalAlpha = 0.9
+      const fontSize = 13
+      const text = block.activeEffects.map(e => effectNames[e]).join(' ')
+      ctx.font = `bold ${fontSize}px Arial`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillStyle = '#ffffff'
+      ctx.shadowColor = 'rgba(0,0,0,0.5)'
+      ctx.shadowBlur = 2
+      ctx.fillText(text, block.x + block.width / 2, y + block.height / 2)
       ctx.restore()
     }
   }

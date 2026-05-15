@@ -8,7 +8,7 @@ export const DEBUG = {
   // ===== 恐龙之力：强制每次触发指定恐龙 =====
   // 设为 0~4 强制触发对应恐龙，设为 -1 不强制
   // 0=霸王龙(减速) 1=腕龙(加宽) 2=剑龙(护盾) 3=翼龙(修正) 4=迅猛龙(3倍分)
-  forceDinoType: 3,
+  forceDinoType: -1,
 
   // ===== 每块都是恐龙方块 =====
   alwaysDinoBlock: false,

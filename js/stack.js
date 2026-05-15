@@ -115,8 +115,10 @@ export class Stack {
       this.reviveBoostCount--
     }
     // 霸王龙之怒：下一块减速
+    let slowApplied = false
     if (this.dinoPower.slowNext) {
       speed *= 0.5
+      slowApplied = true
       if (!DEBUG.enabled || !DEBUG.persistDinoPower) this.dinoPower.slowNext = false
     }
 
@@ -142,19 +144,21 @@ export class Stack {
       if (this.blocks.length > 0 && this.blocks.length % 5 === 0) {
         block.dinoType = -1 // -1 表示未知恐龙
       }
-      // 如果上一次触发了恐龙增益，这一块显示对应恐龙图标
-      if (this._nextDinoDisplay !== undefined) {
-        block.dinoType = this._nextDinoDisplay
-        this._nextDinoDisplay = undefined
-      }
-      // 每15层生成彩虹方块
-      if (this.layerCount > 0 && this.layerCount % 15 === 0) {
+      // 每12层生成彩虹方块（避免和恐龙方块重合）
+      if (this.layerCount > 0 && this.layerCount % 12 === 0) {
         block.isRainbow = true
         block.color = 'rainbow'
       }
     }
     block.setScreenWidth(this.screenWidth)
     if (widenFlash) block.widenFlash = widenFlash
+    // 标记当前方块生效的恐龙效果（用于滑动时显示图标）
+    block.activeEffects = []
+    if (slowApplied) block.activeEffects.push(0)            // 霸王龙：减速
+    if (widenFlash) block.activeEffects.push(1)             // 腕龙：加宽
+    if (this.dinoPower.shield) block.activeEffects.push(2)  // 剑龙：护盾待用
+    if (this.dinoPower.guidNext) block.activeEffects.push(3) // 翼龙：矫正
+    if (this.dinoPower.scoreMulti > 1) block.activeEffects.push(4) // 迅猛龙：倍率
     this.currentBlock = block
   }
 
@@ -189,11 +193,14 @@ export class Stack {
       return { result: 'game_over', combo: this.combo, score: this.score }
     }
 
-    // 判定是否完美（比较中心点偏移，避免加宽方块无法触发）
+    // 判定是否完美
+    // 条件1：中心点偏移小于阈值
+    // 条件2：加宽方块完整覆盖底部固定块（切割后宽度等于固定块宽度）
     const movingCenter = moving.x + moving.width / 2
     const baseCenter = base.x + base.width / 2
     const offset = Math.abs(movingCenter - baseCenter)
-    let isPerfect = offset < PERFECT_THRESHOLD
+    const coversBase = (moving.x <= base.x) && (moving.x + moving.width >= base.x + base.width)
+    let isPerfect = offset < PERFECT_THRESHOLD || coversBase
     // DEBUG: 强制完美
     if (DEBUG.enabled && DEBUG.alwaysPerfect) isPerfect = true
     let itemUsed = null
@@ -264,19 +271,21 @@ export class Stack {
       this.score += baseScore
     }
 
-    // 恐龙增益触发（完美放置恐龙方块时触发效果）
+    // 恐龙增益触发（只有未知恐龙方块完美放置 或 DEBUG已知恐龙方块 才触发）
     let dinoPowerTriggered = undefined
-    if (isPerfect && moving.dinoType !== undefined) {
+    const canTriggerDino = moving.dinoType === -1 || (DEBUG.enabled && DEBUG.alwaysDinoBlock && moving.dinoType >= 0)
+    if (isPerfect && canTriggerDino) {
       let triggerType
-      if (moving.dinoType === -1) {
+      if (moving.dinoType >= 0) {
+        // DEBUG已知恐龙：直接触发对应效果
+        triggerType = moving.dinoType
+      } else {
         // 未知恐龙：随机决定（DEBUG可强制）
         triggerType = (DEBUG.enabled && DEBUG.forceDinoType >= 0) ? DEBUG.forceDinoType : Math.floor(Math.random() * 5)
-      } else {
-        // 已知恐龙：直接触发对应效果
-        triggerType = moving.dinoType
       }
       dinoPowerTriggered = triggerType
-      this._nextDinoDisplay = triggerType
+      // 成功触发恐龙助力，当前得分×2
+      this.score += baseScore  // 额外奖励一倍基础分（等效×2）
       switch (triggerType) {
         case 0: this.dinoPower.slowNext = true; break
         case 1: this.dinoPower.widenNext = true; break
@@ -294,7 +303,7 @@ export class Stack {
       height: this.blockHeight,
       color: moving.color
     })
-    placedBlock.dinoType = moving.dinoType !== undefined ? moving.dinoType : undefined
+    placedBlock.dinoType = dinoPowerTriggered !== undefined ? dinoPowerTriggered : moving.dinoType
     placedBlock.setScreenWidth(this.screenWidth)
     placedBlock.stop()
     if (this.baseBlock) this.baseBlock.isBase = false
@@ -454,7 +463,7 @@ export class Stack {
       guidNext: false, scoreMulti: 1
     }
     this._lastItemUsedInCreate = null
-    this._nextDinoDisplay = undefined
+    this.milestoneEvent = null
     this.init()
   }
 }

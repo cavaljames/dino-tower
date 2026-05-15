@@ -292,7 +292,7 @@ export class GameManager {
       this.renderer.triggerPerfectText()
     } else if (result.shieldUsed) {
       // 剑龙护盾效果
-      this.renderer.triggerToast('🛡️ 护盾抵挡!')
+      this.renderer.triggerToast('护盾抵挡!')
       this.renderer.triggerShake(4, 10)
       // 方块闪金色
       if (this.stack.currentBlock) {
